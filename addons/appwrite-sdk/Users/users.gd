@@ -41,6 +41,7 @@ signal name_updated()
 signal password_updated()
 signal prefs_updated()
 signal pwd_recovery_updated()
+signal error()
 
 func _init():
 	pass
@@ -100,8 +101,9 @@ func __post(type: int, payload: Dictionary = {}, param: String = "") -> UsersTas
 func get_logged() -> UsersTask :
 	return __get(UsersTask.Task.GET)
 
-func create(email: String, password: String, _name: String = "") -> UsersTask:
+func create(userId: String, email: String, password: String, _name: String = "") -> UsersTask:
 	var payload : Dictionary = { "email":email, "password":password }
+	payload["userId"] = userId
 	if _name != "" : payload["name"] = _name
 	return __post(UsersTask.Task.CREATE, payload)
 

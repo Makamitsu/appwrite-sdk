@@ -76,7 +76,8 @@ func _on_task_completed(result : int, response_code : int, headers : PackedStrin
 	if result > 0: 
 		complete({}, {result = result, message = "HTTP Request Error"})
 		return
-	var result_body : Dictionary = JSON.parse_string(body.get_string_from_utf8()).result if body.get_string_from_utf8() else {}
+	var result_body: Dictionary = JSON.parse_string(body.get_string_from_utf8())
+	if result_body == null: result_body = {}
 	match response_code:
 		200:
 			match _code:
