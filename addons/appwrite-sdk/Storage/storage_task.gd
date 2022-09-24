@@ -1,5 +1,5 @@
 class_name StorageTask
-extends Reference
+extends RefCounted
 
 signal completed(task_response)
 
@@ -17,9 +17,9 @@ enum Task {
 var _code : int
 var _method : int
 var _endpoint : String
-var _headers : PoolStringArray
+var _headers : PackedStringArray
 var _payload : Dictionary
-var _bytepayload : PoolByteArray
+var _bytepayload : PackedByteArray
 
 # EXPOSED VARIABLES ---------------------------------------------------------
 var response : Dictionary
@@ -28,7 +28,7 @@ var error : Dictionary
 
 var _handler : HTTPRequest
 
-func _init(code : int, endpoint : String, headers : PoolStringArray,  payload : Dictionary = {}, bytepayload: PoolByteArray = []):
+func _init(code : int, endpoint : String, headers : PackedStringArray,  payload : Dictionary = {}, bytepayload: PackedByteArray = PackedByteArray([])):
 	_code = code
 	_endpoint = endpoint
 	_headers = headers
@@ -50,18 +50,18 @@ func match_code(code : int) -> int:
 
 func push_request(httprequest : HTTPRequest) -> void:
 	_handler = httprequest
-	httprequest.connect("request_completed", self, "_on_task_completed")
-	if not _bytepayload.empty():
+	httprequest.request_completed.connect(self._on_task_completed)
+	if not _bytepayload.size()==0:
 		var err = httprequest.request(_endpoint, _headers, true, _method, _bytepayload.get_string_from_ascii())
 	else:
-		httprequest.request(_endpoint, _headers, true, _method, to_json(_payload))
+		httprequest.request(_endpoint, _headers, true, _method, JSON.stringify(_payload))
 
-func _on_task_completed(result : int, response_code : int, headers : PoolStringArray, body : PoolByteArray) -> void:
+func _on_task_completed(result : int, response_code : int, headers : PackedStringArray, body : PackedByteArray) -> void:
 	if result > 0: 
 		complete({}, {result = result, message = "HTTP Request Error"})
 		return
-	var validate: String = validate_json(body.get_string_from_utf8())
-	var result_body: Dictionary = parse_json(body.get_string_from_utf8()) if not validate else {error = validate}
+	var result_body: Dictionary = JSON.parse_string(body.get_string_from_utf8())
+	if result_body == null: result_body = {}
 	if response_code in [200, 201, 204]:
 		if _code in [Task.DOWNLOAD_FILE, Task.GET_FILE_VIEW, Task.GET_FILE_PREVIEW]:
 			var file_name: String = get_header_value("Content-Disposition: ", headers)
@@ -82,7 +82,7 @@ func complete(_result: Dictionary = response,  _error : Dictionary = error) -> v
 	emit_signal("completed", TaskResponse.new(response, error))
 
 
-func get_header_value(_header: String, headers : PoolStringArray) -> String:
+func get_header_value(_header: String, headers : PackedStringArray) -> String:
 	for header in headers:
 		if header.begins_with(_header):
 			return header.trim_prefix(_header)

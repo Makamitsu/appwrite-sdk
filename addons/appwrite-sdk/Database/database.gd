@@ -56,7 +56,7 @@ func __post(type: int, payload: Dictionary = {}, params: Dictionary = {}) -> Dat
 # -------- CLIENT API
 func create_document(
 	collection_id: String, data: Dictionary,
-	read: PoolStringArray = ["*"], write: PoolStringArray = ["*"],
+	read: PackedStringArray = PackedStringArray(["*"]), write: PackedStringArray = PackedStringArray(["*"]),
 	parent_id: String = "", parent_property: String = "", parent_property_type: String = ""
 ) -> DatabaseTask:
 	var payload : Dictionary = {
@@ -80,8 +80,8 @@ func get_document(collection_id: String, document_id: String) -> DatabaseTask:
 
 func update_document(
 	document_id: String, collection_id: String, 
-	data: Dictionary, read: PoolStringArray = ["*"], write: PoolStringArray = ["*"]
-) -> DatabaseTask:
+	data: Dictionary, read: PackedStringArray = PackedStringArray(["*"]),
+	write: PackedStringArray = PackedStringArray(["*"])) -> DatabaseTask:
 	var payload : Dictionary = {
 		"data" : data,
 		"read" : read, "write" : write,
@@ -94,7 +94,7 @@ func delete_document(collection_id: String, document_id: String) -> DatabaseTask
 # ------- SERVER API
 func create_collection(
 	collection_name: String,
-	read: PoolStringArray, write: PoolStringArray, rules: Array
+	read: PackedStringArray, write: PackedStringArray, rules: Array
    ) -> DatabaseTask:
 	var _rules : Array = []
 	for rule in rules:
@@ -119,12 +119,12 @@ func get_collection(collection_id: String) -> DatabaseTask:
 
 func update_collection(
 	collection_id: String, collection_name: String,
-	read: PoolStringArray = [], write: PoolStringArray = [], rules: PoolStringArray = []
+	read: PackedStringArray = PackedStringArray([]), write: PackedStringArray = PackedStringArray([]), rules: PackedStringArray = PackedStringArray([])
    ) -> DatabaseTask:
 	var payload : Dictionary = { "name" : collection_name }
-	if not read.empty() : payload["$permissions"]["read"] = read
-	if not write.empty() : payload["$permissions"]["write"] = write
-	if not rules.empty() : payload["rules"] = rules
+	if not read.size()==0 : payload["$permissions"]["read"] = read
+	if not write.size()==0 : payload["$permissions"]["write"] = write
+	if not rules.size()==0 : payload["rules"] = rules
 	return __post(DatabaseTask.Task.UPDATE_COLLECTION, payload, {collection_id = collection_id})
 
 func delete_collection(collection_id: String) -> DatabaseTask:
@@ -133,9 +133,9 @@ func delete_collection(collection_id: String) -> DatabaseTask:
 
 # Process a specific task
 func _process_task(task : DatabaseTask, _fake : bool = false) -> void:
-	task.connect("completed", self, "_on_task_completed", [task])
+	task.completed.connect(self._on_task_completed.bind(task))
 	if _fake:
-		yield(get_tree().create_timer(0.5), "timeout")
+		await get_tree().create_timer(0.5).timeout
 		task.complete(task.data, task.error)
 	else:
 		var httprequest : HTTPRequest = HTTPRequest.new()

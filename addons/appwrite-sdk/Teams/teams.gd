@@ -3,7 +3,7 @@ extends Node
 
 const _REST_BASE: String = "/teams"
 
-var _cookies : PoolStringArray = []
+var _cookies : PackedStringArray = PackedStringArray([])
 
 signal task_response(task_response)
 signal success(response)
@@ -31,7 +31,7 @@ func __match_resource(type: int, params: Dictionary = {}) -> String:
 	match type:
 		TeamsTask.Task.LIST, TeamsTask.Task.CREATE, TeamsTask.Task.DELETE: resource = _REST_BASE
 		TeamsTask.Task.GET, TeamsTask.Task.UPDATE, TeamsTask.Task.DELETE: resource = _REST_BASE + "/" + params.team_id
-		TeamsTask.Task.CREATE_MEMBERSHIP, TeamsTask.Task.GET_MEMBERSHIPS: resource = _REST_BASE + "/" + params.team_id + "/memberships" + (params.query if params.has("query") else "")
+		TeamsTask.Task.CREATE_MEMBERSHIP, TeamsTask.Task.GET_MEMBERSHIP: resource = _REST_BASE + "/" + params.team_id + "/memberships" + (params.query if params.has("query") else "")
 		TeamsTask.Task.UPDATE_MEMBERSHIP_ROLES, TeamsTask.Task.UPDATE_MEMBERSHIP_STATUS, TeamsTask.Task.DELETE_MEMBERSHIP: resource = _REST_BASE + "/" + params.team_id + "/memberships/" + params.membership_id
 	return resource
 
@@ -100,9 +100,9 @@ func delete_membership(team_id: String, membership_id: String, roles: Array) -> 
 
 # Process a specific task
 func _process_task(task : TeamsTask, _fake : bool = false) -> void:
-	task.connect("completed", self, "_on_task_completed", [task])
+	task.completed.connect(self._on_task_completed.bind(task))
 	if _fake:
-		yield(get_tree().create_timer(0.5), "timeout")
+		await get_tree().create_timer(0.5).timeout
 		task.complete(task.data, task.error)
 	else:
 		var httprequest : HTTPRequest = HTTPRequest.new()
@@ -122,7 +122,7 @@ func _on_task_completed(task_response: TaskResponse, task: TeamsTask) -> void:
 			TeamsTask.Task.DELETE: _signal = "deleted"
 			TeamsTask.Task.CREATE_MEMBERSHIP : _signal = "created_membership"
 			TeamsTask.Task.UPDATE_MEMBERSHIP_ROLES : _signal = "updated_membership_roles"
-			TeamsTask.Task.GET_MEMBERSHIPS : _signal = "got_membership"
+			TeamsTask.Task.GET_MEMBERSHIP : _signal = "got_membership"
 			TeamsTask.Task.UPDATE_MEMBERSHIP_STATUS : _signal = "updated_membership_status"
 			TeamsTask.Task.DELETE_MEMBERSHIP : _signal = "deleted_membership"
 			_: _signal = "success"

@@ -14,7 +14,7 @@ class Providers:
 	const GOOGLE := "google"
 	const TWITTER := "twitter"
 
-var _cookies : PoolStringArray = []
+var _cookies : PackedStringArray = PackedStringArray([])
 
 signal task_response(task_response)
 signal success(response)
@@ -161,11 +161,11 @@ func update_magic_url_session(user_id: String, secret: String) -> AccountTask:
 	var payload: Dictionary = { userId = user_id, secret = secret }
 	return __post(AccountTask.Task.UPDATE_MAGIC_URL, payload)
 
-func create_oauth2_session(provider: String, success: String = "", failure: String = "", scopes: PoolStringArray = []) -> AccountTask:
+func create_oauth2_session(provider: String, success: String = "", failure: String = "", scopes: PackedStringArray = PackedStringArray([])) -> AccountTask:
 	var endpoint: String = provider
 	if success != "": endpoint+="&success="+success
 	if failure != "": endpoint+="&failure="+failure
-	if not scopes.empty(): endpoint+="&scopes="+scopes.join(",")
+	if not scopes.size()==0: endpoint+="&scopes="+",".join(scopes)
 	return __get(AccountTask.Task.CREATE_SESSION_OAUTH2, endpoint)
 
 func create_verification(url: String) -> AccountTask:
@@ -182,9 +182,9 @@ func update_verification(user_id: String, secret: String) -> AccountTask:
 
 # Process a specific task
 func _process_task(task : AccountTask, _fake : bool = false) -> void:
-	task.connect("completed", self, "_on_task_completed", [task])
+	task.completed.connect(self._on_task_completed.bind(task))
 	if _fake:
-		yield(get_tree().create_timer(0.5), "timeout")
+		await get_tree().create_timer(0.5).timeout
 		task.complete(task.data, task.error)
 	else:
 		var httprequest : HTTPRequest = HTTPRequest.new()

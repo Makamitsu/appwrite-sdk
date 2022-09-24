@@ -1,5 +1,5 @@
 class_name AccountTask
-extends Reference
+extends RefCounted
 
 signal completed(task_response)
 
@@ -35,7 +35,7 @@ enum Task {
 var _code : int
 var _method : int
 var _endpoint : String
-var _headers : PoolStringArray
+var _headers : PackedStringArray
 var _payload : Dictionary
 
 # EXPOSED VARIABLES ---------------------------------------------------------
@@ -46,7 +46,7 @@ var cookies : Array
 
 var _handler : HTTPRequest
 
-func _init(code : int, endpoint : String, headers : PoolStringArray, payload : Dictionary = {}):
+func _init(code : int, endpoint : String, headers : PackedStringArray, payload : Dictionary = {}):
 	_code = code
 	_endpoint = endpoint
 	_headers = headers
@@ -69,15 +69,16 @@ func match_code(code : int) -> int:
 
 func push_request(httprequest : HTTPRequest) -> void:
 	_handler = httprequest
-	_handler.connect("request_completed", self, "_on_task_completed")
-	_handler.request(_endpoint, _headers, true, _method, to_json(_payload))
+	_handler.request_completed.connect(self._on_task_completed)
+	_handler.request(_endpoint, _headers, true, _method, JSON.stringify(_payload))
 
-func _on_task_completed(result : int, response_code : int, headers : PoolStringArray, body : PoolByteArray) -> void:
+func _on_task_completed(result : int, response_code : int, headers : PackedStringArray, body : PackedByteArray) -> void:
 	if result > 0: 
 		complete({}, {result = result, message = "HTTP Request Error"})
 		return
-	var validate: String = validate_json(body.get_string_from_utf8())
-	var result_body: Dictionary = parse_json(body.get_string_from_utf8()) if not validate else {error = validate}
+	
+	var result_body: Dictionary = JSON.parse_string(body.get_string_from_utf8())
+	if result_body == null: result_body = {}
 	match response_code:
 		200:
 			match _code:
@@ -96,7 +97,7 @@ func _on_task_completed(result : int, response_code : int, headers : PoolStringA
 			if result_body == null : result_body = {}
 			complete({}, result_body)
 
-func get_cookies(cookies : PoolStringArray) -> void:
+func get_cookies(cookies : PackedStringArray) -> void:
 	for cookie in cookies:
 		if cookie.to_lower().begins_with("X-Fallback-Cookies:".to_lower()):
 			self.cookies.append(cookie)

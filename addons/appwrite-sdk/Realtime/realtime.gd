@@ -12,10 +12,10 @@ var _client = WebSocketClient.new()
 var subscribed_channels: Array = []
 
 func _ready():
-	_client.connect("connection_closed", self, "_closed")
-	_client.connect("connection_error", self, "_closed")
-	_client.connect("connection_established", self, "_connected")
-	_client.connect("data_received", self, "_on_data")
+	_client.connection_closed.connect(self._closed)
+	_client.connection_error.connect(self._closed)
+	_client.connection_established.connect(self._connected)
+	_client.data_received.connect(self._on_data)
 
 func subscribe(channels: Array) -> bool:
 	var endpoint: String = get_parent().endpoint_realtime
@@ -29,7 +29,7 @@ func subscribe(channels: Array) -> bool:
 	return !bool(err)
 
 func unsubscribe(channels: Array = []) -> void:
-	if channels.empty():
+	if channels.size()==0:
 		_client.disconnect_from_host(1000, "Client ubsubscribed.")
 	else:
 		for channel in channels: subscribed_channels.erase(channel)
@@ -43,10 +43,10 @@ func _closed(was_clean = false):
 
 func _connected(proto = ""):
 	emit_signal("subscribed")
-	
+
 func _on_data():
 	var data: String = _client.get_peer(1).get_packet().get_string_from_utf8()
-	emit_signal("received_updates", parse_json(data))
+	emit_signal("received_updates", JSON.parse_string(data))
 
 func _process(delta):
 	_client.poll()

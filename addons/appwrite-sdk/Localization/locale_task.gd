@@ -1,5 +1,5 @@
 class_name LocaleTask
-extends Reference
+extends RefCounted
 
 signal completed(task_response)
 
@@ -17,7 +17,7 @@ enum Task {
 var _code : int
 var _method : int
 var _endpoint : String
-var _headers : PoolStringArray
+var _headers : PackedStringArray
 
 # EXPOSED VARIABLES ---------------------------------------------------------
 var response : Dictionary
@@ -26,7 +26,7 @@ var error : Dictionary
 
 var _handler : HTTPRequest
 
-func _init(code : int, endpoint : String, headers : PoolStringArray):
+func _init(code : int, endpoint : String, headers : PackedStringArray):
 	_code = code
 	_endpoint = endpoint
 	_headers = headers
@@ -39,14 +39,14 @@ func match_code(code : int) -> int:
 
 func push_request(httprequest : HTTPRequest) -> void:
 	_handler = httprequest
-	httprequest.connect("request_completed", self, "_on_task_completed")
+	httprequest.request_completed.connect(self._on_task_completed)
 	httprequest.request(_endpoint, _headers, true, _method)
 
-func _on_task_completed(result : int, response_code : int, headers : PoolStringArray, body : PoolByteArray) -> void:
+func _on_task_completed(result : int, response_code : int, headers : PackedStringArray, body : PackedByteArray) -> void:
 	if result > 0: 
 		complete({}, {result = result, message = "HTTP Request Error"})
 		return
-	var result_body = JSON.parse(body.get_string_from_utf8()).result if body.get_string_from_utf8() else {}
+	var result_body = JSON.parse_string(body.get_string_from_utf8()).result if body.get_string_from_utf8() else {}
 	if response_code in [200, 201, 204]:
 		complete(result_body)
 	else:
