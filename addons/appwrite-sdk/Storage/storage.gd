@@ -66,10 +66,9 @@ func __post(type: int, payload: Dictionary = {}, params: Dictionary = {}) -> Sto
 	return storage_task
 
 func _read_file(file_path: String) -> PackedByteArray :
-	var file : File = File.new()
-	var error : int = file.open(file_path, File.READ)
-	if error != OK: 
-		printerr("could not open %s "%file_path)
+	var file : FileAccess = FileAccess.open(file_path, FileAccess.READ)
+	if null == file: 
+		printerr("could not open ", file_path, ": ", FileAccess.get_open_error())
 		return PackedByteArray([])
 	var file_buff : PackedByteArray = file.get_buffer(file.get_len())
 	file.close()

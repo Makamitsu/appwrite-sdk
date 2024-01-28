@@ -70,9 +70,9 @@ func list() -> TeamsTask:
 
 func get_team(team_id: String) -> TeamsTask:
 	return __get(TeamsTask.Task.GET, { team_id = team_id })
-	
-func get_logs() -> TeamsTask:
-	return __get(TeamsTask.Task.GET_LOGS)
+
+#func get_logs() -> TeamsTask:
+	#return __get(TeamsTask.Task.GET_LOGS)
 
 func update(team_id: String, name: String) -> TeamsTask:
 	return __post(TeamsTask.Task.UPDATE, { name = name }, { team_id = team_id })
@@ -89,7 +89,7 @@ func get_memberships(team_id: String, search: String = "", limit: int = 0, offse
 	if limit!=0: query+="&limit="+str(limit)
 	if offset!=0: query+="&offset="+str(offset)
 	if order_by!="": query+="&orderBy="+order_by
-	return __get(TeamsTask.Task.GET_MEMBERSHIPS, {team_id = team_id, query = query})
+	return __get(TeamsTask.Task.GET_MEMBERSHIP, {team_id = team_id, query = query})
 
 func update_membership_status(team_id: String, membership_id: String, user_id: String, secret: String) -> TeamsTask:
 	return __post(TeamsTask.Task.UPDATE_MEMBERSHIP_STATUS, { userId = user_id, secret = secret }, { team_id = team_id, membership_id = membership_id })

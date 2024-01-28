@@ -54,7 +54,7 @@ func load_modules() -> void:
 	add_child(locale)
 	add_child(avatars)
 	add_child(health)
-	add_child(realtime)
+	#add_child(realtime)
 
 
 # ------ CLIENT API

@@ -117,7 +117,7 @@ func update_name(name: String) -> UsersTask:
 	return __post(UsersTask.Task.UPDATE_NAME, { name = name })
 
 func update_password(password: String, old_password: String) -> UsersTask:
-	return __post(UsersTask.Task.UPDATE_PWD, { password = password, oldPassword = old_password })
+	return __post(UsersTask.Task.UPDATE_PASSWORD, { password = password, oldPassword = old_password })
 
 func update_email(email: String, password: String) -> UsersTask:
 	return __post(UsersTask.Task.UPDATE_EMAIL, { email = email, password = password })
@@ -154,11 +154,11 @@ func create_anonymous_session() -> UsersTask:
 
 func create_magic_url_session(email: String, url: String = "") -> UsersTask:
 	var payload: Dictionary = { email = email, url = url }
-	return __post(UsersTask.Task.CREATE_MAGIC_URL, payload)
+	return __post(UsersTask.Task.CREATE_MAGIC_LINK, payload)
 
 func update_magic_url_session(user_id: String, secret: String) -> UsersTask:
 	var payload: Dictionary = { userId = user_id, secret = secret }
-	return __post(UsersTask.Task.UPDATE_MAGIC_URL, payload)
+	return __post(UsersTask.Task.UPDATE_MAGIC_LINK, payload)
 
 func create_oauth2_session(provider: String, success: String = "", failure: String = "", scopes: PackedStringArray = PackedStringArray([])) -> UsersTask:
 	var endpoint: String = provider

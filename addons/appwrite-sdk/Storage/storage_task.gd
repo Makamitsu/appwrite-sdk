@@ -52,9 +52,9 @@ func push_request(httprequest : HTTPRequest) -> void:
 	_handler = httprequest
 	httprequest.request_completed.connect(self._on_task_completed)
 	if not _bytepayload.size()==0:
-		var err = httprequest.request(_endpoint, _headers, true, _method, _bytepayload.get_string_from_ascii())
+		var err = httprequest.request(_endpoint, _headers, _method, _bytepayload.get_string_from_ascii())
 	else:
-		httprequest.request(_endpoint, _headers, true, _method, JSON.stringify(_payload))
+		httprequest.request(_endpoint, _headers, _method, JSON.stringify(_payload))
 
 func _on_task_completed(result : int, response_code : int, headers : PackedStringArray, body : PackedByteArray) -> void:
 	if result > 0: 
